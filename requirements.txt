@@ -1,3 +1,4 @@
+aiohttp
 dnspython
 ffmpeg-python
 hachoir
