@@ -61,21 +61,19 @@ class MergeBot(Client):
 
     def stop(self):
         super().stop()
-        return LOGGER.info("Bot Stopped")
+        return LOGGER.info("Bot Stopped !!")
 
 
 mergeApp = MergeBot(
-    name="merge-bot",
+    name="fx-media-remux",
     api_hash=Config.API_HASH,
     api_id=int(Config.TELEGRAM_API),
     bot_token=Config.BOT_TOKEN,
-    workers=300,
-    plugins=dict(root="plugins"),
-    app_version="5.0+yash-mergebot",
+    plugins=dict(root="plugins")
 )
 
 
-if os.path.exists("downloads") == False:
+if not os.path.exists("downloads"):
     os.makedirs("downloads")
 
 
