@@ -6,7 +6,7 @@ RUN chmod 777 /usr/src/mergebot
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -y update && apt-get -y upgrade && apt-get install -y python3 python3-pip git \
-    p7zip-full p7zip-rar xz-utils wget curl pv jq \
+    apt-utils xz-utils wget curl pv jq \
     ffmpeg unzip mediainfo mkvtoolnix
 
 # RUN curl https://rclone.org/install.sh | bash
@@ -15,8 +15,11 @@ RUN apt-get -y update && apt-get -y upgrade && apt-get install -y python3 python
 RUN echo deb http://http.us.debian.org/debian/ testing non-free contrib main > /etc/apt/sources.list && \
     apt-get -y update
 
-# Install AOM and other dependencies
-RUN apt-get install libcrypt1 libaom-dev -y
+# Install other dependencies
+RUN apt-get libcrypt1 -y
+
+# Install AOM
+RUN apt-get install libaom-dev -y
 
 # Compile and install fresh ffmpeg from sources:
 # See: https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
