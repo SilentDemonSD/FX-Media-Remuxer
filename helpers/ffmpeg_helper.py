@@ -20,7 +20,7 @@ async def MergeVideo(input_file: str, user_id: int, message: Message, format_: s
     :param `format_`: Pass File Extension.
     :return: This will return Merged Video File Path
     """
-    output_vid = f"downloads/{str(user_id)}/[@yashoswalyo].{format_.lower()}"
+    output_vid = f"downloads/{user_id}/[@yashoswalyo].{format_.lower()}"
     file_generator_command = [
         "ffmpeg",
         "-f",
@@ -54,10 +54,7 @@ async def MergeVideo(input_file: str, user_id: int, message: Message, format_: s
     t_response = stdout.decode().strip()
     LOGGER.info(e_response)
     LOGGER.info(t_response)
-    if os.path.lexists(output_vid):
-        return output_vid
-    else:
-        return None
+    return output_vid if os.path.lexists(output_vid) else None
 
 
 async def MergeSub(filePath: str, subPath: str, user_id):
@@ -72,44 +69,50 @@ async def MergeSub(filePath: str, subPath: str, user_id):
     returns: Merged Video File Path
     """
     LOGGER.info("Generating mux command")
-    muxcmd = []
-    muxcmd.append("ffmpeg")
-    muxcmd.append("-hide_banner")
-    muxcmd.append("-i")
-    muxcmd.append(filePath)
-    muxcmd.append("-i")
-    muxcmd.append(subPath)
-    muxcmd.append("-map")
-    muxcmd.append("0:v:0")
-    muxcmd.append("-map")
-    muxcmd.append("0:a:?")
-    muxcmd.append("-map")
-    muxcmd.append("0:s:?")
-    muxcmd.append("-map")
-    muxcmd.append("1:s")
     videoData = ffmpeg.probe(filename=filePath)
     videoStreamsData = videoData.get("streams")
-    subTrack = 0
-    for i in range(len(videoStreamsData)):
-        if videoStreamsData[i]["codec_type"] == "subtitle":
-            subTrack += 1
-    muxcmd.append(f"-metadata:s:s:{subTrack}")
+    subTrack = sum(
+        1
+        for i in range(len(videoStreamsData))
+        if videoStreamsData[i]["codec_type"] == "subtitle"
+    )
+    muxcmd = [
+        "ffmpeg",
+        "-hide_banner",
+        "-i",
+        filePath,
+        "-i",
+        subPath,
+        "-map",
+        "0:v:0",
+        "-map",
+        "0:a:?",
+        "-map",
+        "0:s:?",
+        "-map",
+        "1:s",
+        f"-metadata:s:s:{subTrack}",
+    ]
     subTrack += 1
     subTitle = f"Track {subTrack} - tg@yashoswalyo"
-    muxcmd.append(f"title={subTitle}")
-    muxcmd.append("-c:v")
-    muxcmd.append("copy")
-    muxcmd.append("-c:a")
-    muxcmd.append("copy")
-    muxcmd.append("-c:s")
-    muxcmd.append("srt")
-    muxcmd.append(f"./downloads/{str(user_id)}/[@yashoswalyo]_softmuxed_video.mkv")
+    muxcmd.extend(
+        (
+            f"title={subTitle}",
+            "-c:v",
+            "copy",
+            "-c:a",
+            "copy",
+            "-c:s",
+            "srt",
+            f"./downloads/{str(user_id)}/[@yashoswalyo]_softmuxed_video.mkv",
+        )
+    )
     LOGGER.info("Muxing subtitles")
     subprocess.call(muxcmd)
-    orgFilePath = shutil.move(
-        f"downloads/{str(user_id)}/[@yashoswalyo]_softmuxed_video.mkv", filePath
+    return shutil.move(
+        f"downloads/{str(user_id)}/[@yashoswalyo]_softmuxed_video.mkv",
+        filePath,
     )
-    return orgFilePath
 
 
 def MergeSubNew(filePath: str, subPath: str, user_id, file_list):
@@ -125,37 +128,38 @@ def MergeSubNew(filePath: str, subPath: str, user_id, file_list):
     returns: Merged Video File Path
     """
     LOGGER.info("Generating mux command")
-    muxcmd = []
-    muxcmd.append("ffmpeg")
-    muxcmd.append("-hide_banner")
+    muxcmd = ["ffmpeg", "-hide_banner"]
     videoData = ffmpeg.probe(filename=filePath)
     videoStreamsData = videoData.get("streams")
-    subTrack = 0
-    for i in range(len(videoStreamsData)):
-        if videoStreamsData[i]["codec_type"] == "subtitle":
-            subTrack += 1
+    subTrack = sum(
+        1
+        for i in range(len(videoStreamsData))
+        if videoStreamsData[i]["codec_type"] == "subtitle"
+    )
     for i in file_list:
-        muxcmd.append("-i")
-        muxcmd.append(i)
-    muxcmd.append("-map")
-    muxcmd.append("0:v:0")
-    muxcmd.append("-map")
-    muxcmd.append("0:a:?")
-    muxcmd.append("-map")
-    muxcmd.append("0:s:?")
+        muxcmd.extend(("-i", i))
+    muxcmd.extend(("-map", "0:v:0", "-map", "0:a:?", "-map", "0:s:?"))
     for j in range(1, (len(file_list))):
-        muxcmd.append("-map")
-        muxcmd.append(f"{j}:s")
-        muxcmd.append(f"-metadata:s:s:{subTrack}")
-        muxcmd.append(f"title=Track {subTrack+1} - tg@yashoswalyo")
+        muxcmd.extend(
+            (
+                "-map",
+                f"{j}:s",
+                f"-metadata:s:s:{subTrack}",
+                f"title=Track {subTrack + 1} - tg@yashoswalyo",
+            )
+        )
         subTrack += 1
-    muxcmd.append("-c:v")
-    muxcmd.append("copy")
-    muxcmd.append("-c:a")
-    muxcmd.append("copy")
-    muxcmd.append("-c:s")
-    muxcmd.append("srt")
-    muxcmd.append(f"./downloads/{str(user_id)}/[@yashoswalyo]_softmuxed_video.mkv")
+    muxcmd.extend(
+        (
+            "-c:v",
+            "copy",
+            "-c:a",
+            "copy",
+            "-c:s",
+            "srt",
+            f"./downloads/{str(user_id)}/[@yashoswalyo]_softmuxed_video.mkv",
+        )
+    )
     LOGGER.info("Sub muxing")
     subprocess.call(muxcmd)
     return f"downloads/{str(user_id)}/[@yashoswalyo]_softmuxed_video.mkv"
@@ -163,44 +167,44 @@ def MergeSubNew(filePath: str, subPath: str, user_id, file_list):
 
 def MergeAudio(videoPath: str, files_list: list, user_id):
     LOGGER.info("Generating Mux Command")
-    muxcmd = []
-    muxcmd.append("ffmpeg")
-    muxcmd.append("-hide_banner")
+    muxcmd = ["ffmpeg", "-hide_banner"]
     videoData = ffmpeg.probe(filename=videoPath)
     videoStreamsData = videoData.get("streams")
     audioTracks = 0
     for i in files_list:
-        muxcmd.append("-i")
-        muxcmd.append(i)
-    muxcmd.append("-map")
-    muxcmd.append("0:v:0")
-    muxcmd.append("-map")
-    muxcmd.append("0:a:?")
+        muxcmd.extend(("-i", i))
+    muxcmd.extend(("-map", "0:v:0", "-map", "0:a:?"))
     audioTracks = 0
     for i in range(len(videoStreamsData)):
         if videoStreamsData[i]["codec_type"] == "audio":
-            muxcmd.append(f"disposition:a:{audioTracks}")
-            muxcmd.append("0")
+            muxcmd.extend((f"disposition:a:{audioTracks}", "0"))
             audioTracks += 1
     fAudio = audioTracks
     for j in range(1, len(files_list)):
-        muxcmd.append("-map")
-        muxcmd.append(f"{j}:a")
-        muxcmd.append(f"-metadata:s:a:{audioTracks}")
-        muxcmd.append(f"title=Track {audioTracks+1} - tg@yashoswalyo")
+        muxcmd.extend(
+            (
+                "-map",
+                f"{j}:a",
+                f"-metadata:s:a:{audioTracks}",
+                f"title=Track {audioTracks + 1} - tg@yashoswalyo",
+            )
+        )
         audioTracks += 1
-    muxcmd.append(f"-disposition:s:a:{fAudio}")
-    muxcmd.append("default")
-    muxcmd.append("-map")
-    muxcmd.append("0:s:?")
-    muxcmd.append("-c:v")
-    muxcmd.append("copy")
-    muxcmd.append("-c:a")
-    muxcmd.append("copy")
-    muxcmd.append("-c:s")
-    muxcmd.append("copy")
-    muxcmd.append(f"downloads/{str(user_id)}/[@yashoswalyo]_export.mkv")
-
+    muxcmd.extend(
+        (
+            f"-disposition:s:a:{fAudio}",
+            "default",
+            "-map",
+            "0:s:?",
+            "-c:v",
+            "copy",
+            "-c:a",
+            "copy",
+            "-c:s",
+            "copy",
+            f"downloads/{str(user_id)}/[@yashoswalyo]_export.mkv",
+        )
+    )
     LOGGER.info(muxcmd)
     process = subprocess.call(muxcmd)
     LOGGER.info(process)
@@ -236,10 +240,7 @@ async def cult_small_video(video_file, output_directory, start_time, end_time, f
     t_response = stdout.decode().strip()
     LOGGER.info(e_response)
     LOGGER.info(t_response)
-    if os.path.lexists(out_put_file_name):
-        return out_put_file_name
-    else:
-        return None
+    return out_put_file_name if os.path.lexists(out_put_file_name) else None
 
 
 async def take_screen_shot(video_file, output_directory, ttl):
@@ -255,7 +256,7 @@ async def take_screen_shot(video_file, output_directory, ttl):
     returns: This will return path of screenshot
     """
     # https://stackoverflow.com/a/13891070/4723940
-    out_put_file_name = os.path.join(output_directory, str(time.time()) + ".jpg")
+    out_put_file_name = os.path.join(output_directory, f"{str(time.time())}.jpg")
     if video_file.upper().endswith(
         (
             "MKV",
@@ -295,10 +296,7 @@ async def take_screen_shot(video_file, output_directory, ttl):
         e_response = stderr.decode().strip()
         t_response = stdout.decode().strip()
     #
-    if os.path.exists(out_put_file_name):
-        return out_put_file_name
-    else:
-        return None
+    return out_put_file_name if os.path.exists(out_put_file_name) else None
 
 
 async def extractAudios(path_to_file, user_id):
@@ -308,12 +306,12 @@ async def extractAudios(path_to_file, user_id):
     dir_name = os.path.dirname(os.path.dirname(path_to_file))
     if not os.path.exists(path_to_file):
         return None
-    if not os.path.exists(dir_name + "/extract"):
-        os.makedirs(dir_name + "/extract")
+    if not os.path.exists(f"{dir_name}/extract"):
+        os.makedirs(f"{dir_name}/extract")
     videoStreamsData = ffmpeg.probe(path_to_file)
     # with open("data.json",'w') as f:
     #     f.write(json.dumps(videoStreamsData))
-    extract_dir = dir_name + "/extract"
+    extract_dir = f"{dir_name}/extract"
     audios = []
     for stream in videoStreamsData.get("streams"):
         try:
@@ -322,12 +320,7 @@ async def extractAudios(path_to_file, user_id):
         except Exception as e:
             LOGGER.warning(e)
     for audio in audios:
-        extractcmd = []
-        extractcmd.append("ffmpeg")
-        extractcmd.append("-hide_banner")
-        extractcmd.append("-i")
-        extractcmd.append(path_to_file)
-        extractcmd.append("-map")
+        extractcmd = ["ffmpeg", "-hide_banner", "-i", path_to_file, "-map"]
         try:
             index = audio["index"]
             extractcmd.append(f"0:{index}")
@@ -344,8 +337,7 @@ async def extractAudios(path_to_file, user_id):
                 output_file = output_file.replace(" ", ".")
             except:
                 output_file = str(audio["index"]) + "." + audio["codec_type"] + ".mka"
-            extractcmd.append("-c")
-            extractcmd.append("copy")
+            extractcmd.extend(("-c", "copy"))
             extractcmd.append(f"{extract_dir}/{output_file}")
             LOGGER.info(extractcmd)
             subprocess.call(extractcmd)
@@ -353,9 +345,8 @@ async def extractAudios(path_to_file, user_id):
             LOGGER.error(f"Something went wrong: {e}")
     if get_path_size(extract_dir) > 0:
         return extract_dir
-    else:
-        LOGGER.warning(f"{extract_dir} is empty")
-        return None
+    LOGGER.warning(f"{extract_dir} is empty")
+    return None
 
 
 async def extractSubtitles(path_to_file, user_id):
@@ -365,12 +356,12 @@ async def extractSubtitles(path_to_file, user_id):
     dir_name = os.path.dirname(os.path.dirname(path_to_file))
     if not os.path.exists(path_to_file):
         return None
-    if not os.path.exists(dir_name + "/extract"):
-        os.makedirs(dir_name + "/extract")
+    if not os.path.exists(f"{dir_name}/extract"):
+        os.makedirs(f"{dir_name}/extract")
     videoStreamsData = ffmpeg.probe(path_to_file)
     # with open("data.json",'w') as f:
     #     f.write(json.dumps(videoStreamsData))
-    extract_dir = dir_name + "/extract"
+    extract_dir = f"{dir_name}/extract"
     subtitles = []
     for stream in videoStreamsData.get("streams"):
         try:
@@ -379,12 +370,7 @@ async def extractSubtitles(path_to_file, user_id):
         except Exception as e:
             LOGGER.warning(e)
     for subtitle in subtitles:
-        extractcmd = []
-        extractcmd.append("ffmpeg")
-        extractcmd.append("-hide_banner")
-        extractcmd.append("-i")
-        extractcmd.append(path_to_file)
-        extractcmd.append("-map")
+        extractcmd = ["ffmpeg", "-hide_banner", "-i", path_to_file, "-map"]
         try:
             index = subtitle["index"]
             extractcmd.append(f"0:{index}")
@@ -413,8 +399,7 @@ async def extractSubtitles(path_to_file, user_id):
                     output_file = (
                         str(subtitle["index"]) + "." + subtitle["codec_type"] + ".mka"
                     )
-            extractcmd.append("-c")
-            extractcmd.append("copy")
+            extractcmd.extend(("-c", "copy"))
             extractcmd.append(f"{extract_dir}/{output_file}")
             LOGGER.info(extractcmd)
             subprocess.call(extractcmd)
@@ -422,6 +407,5 @@ async def extractSubtitles(path_to_file, user_id):
             LOGGER.error(f"Something went wrong: {e}")
     if get_path_size(extract_dir) > 0:
         return extract_dir
-    else:
-        LOGGER.warning(f"{extract_dir} is empty")
-        return None
+    LOGGER.warning(f"{extract_dir} is empty")
+    return None

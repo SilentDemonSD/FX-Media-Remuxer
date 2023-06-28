@@ -256,7 +256,6 @@ async def callback_handler(c: Client, cb: CallbackQuery):
                         ]
                     ),
                 )
-            return
         else:
             sMessId = queueDB.get(cb.from_user.id)["subtitles"][sIndex]
             s = await c.get_messages(chat_id=cb.message.chat.id, message_ids=sMessId)
@@ -298,13 +297,12 @@ async def callback_handler(c: Client, cb: CallbackQuery):
                         ]
                     ),
                 )
-            return
-
+        return
     elif cb.data.startswith("addSub_"):
         sIndex = int(cb.data.split(sep="_")[1])
         vMessId = queueDB.get(cb.from_user.id)["videos"][sIndex]
         rmess = await cb.message.edit(
-            text=f"Send me a subtitle file, you have 1 minute",
+            text="Send me a subtitle file, you have 1 minute",
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
@@ -322,12 +320,13 @@ async def callback_handler(c: Client, cb: CallbackQuery):
             media = subs.document or subs.video
             if media.file_name.rsplit(".")[-1] not in "srt":
                 await subs.reply_text(
-                    text=f"Please go back first",
+                    text="Please go back first",
                     reply_markup=InlineKeyboardMarkup(
                         [
                             [
                                 InlineKeyboardButton(
-                                    "🔙 Back", callback_data=f"showFileName_{vMessId}"
+                                    "🔙 Back",
+                                    callback_data=f"showFileName_{vMessId}",
                                 )
                             ]
                         ]
@@ -358,7 +357,7 @@ async def callback_handler(c: Client, cb: CallbackQuery):
         vMessId = queueDB.get(cb.from_user.id)["videos"][sIndex]
         queueDB.get(cb.from_user.id)["subtitles"][sIndex] = None
         await cb.message.edit(
-            text=f"Subtitle Removed Now go back or send next video",
+            text="Subtitle Removed Now go back or send next video",
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
@@ -402,13 +401,13 @@ async def callback_handler(c: Client, cb: CallbackQuery):
     elif cb.data.startswith("toggleEdit_"):
         uid = int(cb.data.split("_")[1])
         user = UserSettings(uid, cb.from_user.first_name)
-        user.edit_metadata = False if user.edit_metadata else True
+        user.edit_metadata = not user.edit_metadata
         user.set()
         await userSettings(
             cb.message, uid, cb.from_user.first_name, cb.from_user.last_name, user
         )
         return
-    
+
     elif cb.data.startswith('extract'):
         edata = cb.data.split('_')[1]
         media_mid = int(cb.data.split('_')[2])

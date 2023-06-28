@@ -24,8 +24,7 @@ async def addUser(uid, fname, lname):
 
 
 async def broadcast():
-    a = Database.mergebot.mergeSettings.find({})
-    return a
+    return Database.mergebot.mergeSettings.find({})
 
 
 async def allowUser(uid, fname, lname):
@@ -94,16 +93,15 @@ async def getUserRcloneConfig(uid):
 
 def getUserMergeSettings(uid: int):
     try:
-        res_cur = Database.mergebot.mergeSettings.find_one({"_id": uid})
-        return res_cur
+        return Database.mergebot.mergeSettings.find_one({"_id": uid})
     except Exception as e:
         LOGGER.info(e)
         return None
 
 
 def setUserMergeSettings(uid: int, name: str, mode, edit_metadata, banned, allowed, thumbnail):
-    modes = Config.MODES
     if uid:
+        modes = Config.MODES
         try:
             Database.mergebot.mergeSettings.insert_one(
                 document={
@@ -118,7 +116,7 @@ def setUserMergeSettings(uid: int, name: str, mode, edit_metadata, banned, allow
                     "thumbnail": thumbnail,
                 }
             )
-            LOGGER.info("User {} Mode updated to {}".format(uid, modes[mode - 1]))
+            LOGGER.info(f"User {uid} Mode updated to {modes[mode - 1]}")
         except Exception:
             Database.mergebot.mergeSettings.replace_one(
                 filter={"_id": uid},
@@ -133,7 +131,7 @@ def setUserMergeSettings(uid: int, name: str, mode, edit_metadata, banned, allow
                     "thumbnail": thumbnail,
                 },
             )
-            LOGGER.info("User {} Mode updated to {}".format(uid, modes[mode - 1]))
+            LOGGER.info(f"User {uid} Mode updated to {modes[mode - 1]}")
         MERGE_MODE[uid] = mode
     # elif mode == 2:
     #     try:

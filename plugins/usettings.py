@@ -35,11 +35,8 @@ async def userSettings(
             userMergeModeStr = "Video 🎥 + Subtitle 📜"
         elif usettings.merge_mode == 4:
             userMergeModeId = 4
-            userMergeModeStr = "Extract" 
-        if usettings.edit_metadata:
-            editMetadataStr = "✅"
-        else:
-            editMetadataStr = "❌"
+            userMergeModeStr = "Extract"
+        editMetadataStr = "✅" if usettings.edit_metadata else "❌"
         uSettingsMessage = f"""
 <b><u>Merge Bot settings for <a href='tg://user?id={uid}'>{fname} {lname}</a></u></b>
     ┃

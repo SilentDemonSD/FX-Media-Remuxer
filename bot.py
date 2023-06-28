@@ -191,16 +191,15 @@ async def broadcast_handler(c: Client, m: Message):
 async def start_handler(c: Client, m: Message):
     user = UserSettings(m.from_user.id, m.from_user.first_name)
 
-    if m.from_user.id != int(Config.OWNER):
-        if user.allowed is False:
-            res = await m.reply_text(
-                text=f"Hi **{m.from_user.first_name}**\n\n 🛡️ Unfortunately you can't use me\n\n**Contact: 🈲 @{Config.OWNER_USERNAME}** ",
-                quote=True,
-            )
-            return
-    else:
+    if m.from_user.id == int(Config.OWNER):
         user.allowed = True
         user.set()
+    elif user.allowed is False:
+        res = await m.reply_text(
+            text=f"Hi **{m.from_user.first_name}**\n\n 🛡️ Unfortunately you can't use me\n\n**Contact: 🈲 @{Config.OWNER_USERNAME}** ",
+            quote=True,
+        )
+        return
     res = await m.reply_text(
         text=f"Hi **{m.from_user.first_name}**\n\n ⚡ I am a file/video merger bot\n\n😎 I can merge Telegram files!, And upload it to telegram\n\n**Owner: 🈲 @{Config.OWNER_USERNAME}** ",
         quote=True,
@@ -238,8 +237,12 @@ async def files_handler(c: Client, m: Message):
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
-                        InlineKeyboardButton("✅ Yes", callback_data=f"rclone_save"),
-                        InlineKeyboardButton("❌ No", callback_data="rclone_discard"),
+                        InlineKeyboardButton(
+                            "✅ Yes", callback_data="rclone_save"
+                        ),
+                        InlineKeyboardButton(
+                            "❌ No", callback_data="rclone_discard"
+                        ),
                     ]
                 ]
             ),
@@ -425,11 +428,11 @@ async def media_extracter(c: Client, m: Message):
         rmess = m.reply_to_message
         if rmess.video or rmess.document:
             media = rmess.video or rmess.document
-            mid=rmess.id
             file_name = media.file_name
             if file_name is None:
                 await m.reply("File name not found; goto @yashoswalyo")
                 return
+            mid = rmess.id
             markup = bMaker.makebuttons(
                 set1=["Audio", "Subtitle", "Cancel"],
                 set2=[f"extract_audio_{mid}", f"extract_subtitle_{mid}", 'cancel'],
@@ -680,7 +683,7 @@ async def makeButtons(bot: Client, m: Message, db: dict):
                     [
                         InlineKeyboardButton(
                             f"{media.file_name}",
-                            callback_data=f"tryotherbutton",
+                            callback_data="tryotherbutton",
                         )
                     ]
                 )
@@ -705,13 +708,17 @@ async def makeButtons(bot: Client, m: Message, db: dict):
                     [
                         InlineKeyboardButton(
                             f"{media.file_name}",
-                            callback_data=f"tryotherbutton",
+                            callback_data="tryotherbutton",
                         )
                     ]
                 )
 
-    markup.append([InlineKeyboardButton("🔗 Merge Now", callback_data="merge")])
-    markup.append([InlineKeyboardButton("💥 Clear Files", callback_data="cancel")])
+    markup.extend(
+        (
+            [InlineKeyboardButton("🔗 Merge Now", callback_data="merge")],
+            [InlineKeyboardButton("💥 Clear Files", callback_data="cancel")],
+        )
+    )
     return markup
 
 
@@ -747,6 +754,4 @@ if __name__ == "__main__":
     except Exception as err:
         LOGGER.error(f"{err}")
         Config.IS_PREMIUM = False
-        pass
-
     mergeApp.run()
