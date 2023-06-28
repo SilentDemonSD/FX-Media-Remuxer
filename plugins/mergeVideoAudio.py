@@ -46,7 +46,7 @@ async def mergeAudio(c: Client, cb: CallbackQuery, new_file_name: str):
         if currentFileNameExt in VIDEO_EXTENSIONS:
             tmpFileName = "vid.mkv"
         elif currentFileNameExt in AUDIO_EXTENSIONS:
-            tmpFileName = "audio." + currentFileNameExt
+            tmpFileName = f"audio.{currentFileNameExt}"
         await asyncio.sleep(5)
         file_dl_path = None
         try:

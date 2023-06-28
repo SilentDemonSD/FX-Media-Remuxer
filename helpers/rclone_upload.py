@@ -68,34 +68,24 @@ class RCUploadTask(Status):
         nstr = nstr.strip()
         nstr = nstr.split(",")
         prg = nstr[1].strip("% ")
-        prg = "Progress:- {} - {}%".format(self.progress_bar(prg), prg)
-        progress = "<b>Uploaded:- {} \n{} \nSpeed:- {} \nETA:- {}</b> \n<b>Using Engine:- </b><code>RCLONE</code>".format(
-            nstr[0], prg, nstr[2], nstr[3].replace("ETA", "")
-        )
-        return progress
+        prg = f"Progress:- {self.progress_bar(prg)} - {prg}%"
+        return f'<b>Uploaded:- {nstr[0]} \n{prg} \nSpeed:- {nstr[2]} \nETA:- {nstr[3].replace("ETA", "")}</b> \n<b>Using Engine:- </b><code>RCLONE</code>'
 
     def progress_bar(self, percentage):
         """Returns a progress bar for download"""
         # percentage is on the scale of 0-1
         comp = "●"
         ncomp = "○"
-        pr = ""
-
         try:
             percentage = int(percentage)
         except:
             percentage = 0
 
-        for i in range(1, 11):
-            if i <= int(percentage / 10):
-                pr += comp
-            else:
-                pr += ncomp
-        return pr
+        return "".join(comp if i <= percentage // 10 else ncomp for i in range(1, 11))
 
     async def update_message(self):
         progress = await self.create_message()
-        if not self._prev_cont == progress:
+        if self._prev_cont != progress:
             # kept just in case
             self._prev_cont = progress
             try:
@@ -106,11 +96,11 @@ class RCUploadTask(Status):
                     ),
                 )
             except MessageNotModified as e:
-                LOGGER.info("{}".format(e))
+                LOGGER.info(f"{e}")
             except FloodWait as e:
-                LOGGER.info("{}".format(e))
+                LOGGER.info(f"{e}")
             except Exception as e:
-                LOGGER.info("Not expected {}".format(e))
+                LOGGER.info(f"Not expected {e}")
 
     async def is_active(self):
         return self._active
@@ -144,7 +134,7 @@ async def rclone_driver(userMess: Message, cb: CallbackQuery, merged_video_path)
         )
     except Exception as er:
         await ul_task.set_inactive()
-        LOGGER.info("Stuff gone wrong in here: " + str(er))
+        LOGGER.info(f"Stuff gone wrong in here: {str(er)}")
         return
 
 
@@ -161,7 +151,7 @@ async def rclone_upload(
 ):
     a = 1
     await task.set_original_message(userMess)
-    data = "upcancel {}".format(cb.from_user.id)
+    data = f"upcancel {cb.from_user.id}"
     msg: Message = await mess.reply_text(
         "**Uploading to configured drive.... will be updated soon.**",
         reply_markup=InlineKeyboardMarkup(
@@ -173,7 +163,7 @@ async def rclone_upload(
         "rclone",
         "copy",
         f"--config={conf_path}",
-        str(merged_video_path),
+        merged_video_path,
         f"{DRIVE_NAME}:{BASE_DIR}",
         "-f",
         "- *.!qB",
@@ -234,7 +224,7 @@ async def rclone_process_display(
                     await task.refresh_info(data)
                     await task.update_message()
 
-        if data == "":
+        if not data:
             blank += 1
             if blank == 20:
                 break

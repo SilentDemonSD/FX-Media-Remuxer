@@ -20,7 +20,7 @@ class MakeButtons:
         if self._isUrl:
             while self._set1:
                 buttons = []
-                for i in range(self.rows):
+                for _ in range(self.rows):
                     if len(self._set1) != 0:
                         buttons.append(
                             InlineKeyboardButton(text=self._set1[0], url=self._set2[0])
@@ -31,7 +31,7 @@ class MakeButtons:
         if self._isCallback:
             while self._set1:
                 buttons = []
-                for i in range(self.rows):
+                for _ in range(self.rows):
                     if len(self._set1) != 0:
                         buttons.append(
                             InlineKeyboardButton(

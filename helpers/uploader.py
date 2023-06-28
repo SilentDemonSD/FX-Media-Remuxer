@@ -27,8 +27,8 @@ async def uploadVideo(
         sent_ = None
         prog = Progress(cb.from_user.id, c, cb.message)
         async with userBot:
-            if upload_mode is False:
-                c_time = time.time()
+            c_time = time.time()
+            if not upload_mode:
                 sent_: Message = await userBot.send_video(
                     chat_id=int(LOGCHANNEL),
                     video=merged_video_path,
@@ -44,7 +44,6 @@ async def uploadVideo(
                     ),
                 )
             else:
-                c_time = time.time()
                 sent_: Message = await userBot.send_document(
                     chat_id=int(LOGCHANNEL),
                     document=merged_video_path,
@@ -68,8 +67,8 @@ async def uploadVideo(
         try:
             sent_ = None
             prog = Progress(cb.from_user.id, c, cb.message)
-            if upload_mode is False:
-                c_time = time.time()
+            c_time = time.time()
+            if not upload_mode:
                 sent_: Message = await c.send_video(
                     chat_id=cb.message.chat.id,
                     video=merged_video_path,
@@ -85,7 +84,6 @@ async def uploadVideo(
                     ),
                 )
             else:
-                c_time = time.time()
                 sent_: Message = await c.send_document(
                     chat_id=cb.message.chat.id,
                     document=merged_video_path,

@@ -31,7 +31,7 @@ from pyrogram.types import CallbackQuery, Message
 
 async def mergeSub(c: Client, cb: CallbackQuery, new_file_name: str):
     omess = cb.message.reply_to_message
-    vid_list = list()
+    vid_list = []
     await cb.message.edit("⭕ Processing...")
     duration = 0
     video_mess = queueDB.get(cb.from_user.id)["videos"][0]
@@ -57,7 +57,7 @@ async def mergeSub(c: Client, cb: CallbackQuery, new_file_name: str):
         if currentFileNameExt in VIDEO_EXTENSIONS:
             tmpFileName = "vid.mkv"
         elif currentFileNameExt in SUBTITLE_EXTENSIONS:
-            tmpFileName = "sub." + currentFileNameExt
+            tmpFileName = f"sub.{currentFileNameExt}"
         await asyncio.sleep(5)
         file_dl_path = None
         try:
@@ -90,7 +90,7 @@ async def mergeSub(c: Client, cb: CallbackQuery, new_file_name: str):
         user_id=cb.from_user.id,
         file_list=vid_list,
     )
-    _cache = list()
+    _cache = []
     if subbed_video is None:
         await cb.message.edit("❌ Failed to add subs video !")
         await delete_all(root=f"downloads/{str(cb.from_user.id)}")

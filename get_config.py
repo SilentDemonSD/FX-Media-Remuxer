@@ -19,7 +19,6 @@ try:
         LOGGER.error(f"CONFIG_FILE_URL: {e}")
 except Exception as e:
     LOGGER.error(e)
-    pass
 load_dotenv(
     "config.env",
     override=True,

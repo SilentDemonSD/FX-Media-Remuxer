@@ -69,25 +69,25 @@ class UserSettings(object):
     def get(self):
         try:
             cur = getUserMergeSettings(self.user_id)
-            if cur is not None:
-                self.name = cur["name"]
-                self.merge_mode = cur["user_settings"]["merge_mode"]
-                self.edit_metadata = cur["user_settings"]["edit_metadata"]
-                self.allowed = cur["isAllowed"]
-                self.thumbnail = cur["thumbnail"]
-                self.banned = cur["isBanned"]
-                return {
-                    "uid": self.user_id,
-                    "name": self.name,
-                    "user_settings": {
-                        "merge_mode": self.merge_mode,
-                        "edit_metadata": self.edit_metadata,
-                    },
-                    "isAllowed": self.allowed,
-                    "isBanned": self.banned,
-                    "thumbnail": self.thumbnail,
-                }
-            else: return self.set()
+            if cur is None:
+                return self.set()
+            self.name = cur["name"]
+            self.merge_mode = cur["user_settings"]["merge_mode"]
+            self.edit_metadata = cur["user_settings"]["edit_metadata"]
+            self.allowed = cur["isAllowed"]
+            self.thumbnail = cur["thumbnail"]
+            self.banned = cur["isBanned"]
+            return {
+                "uid": self.user_id,
+                "name": self.name,
+                "user_settings": {
+                    "merge_mode": self.merge_mode,
+                    "edit_metadata": self.edit_metadata,
+                },
+                "isAllowed": self.allowed,
+                "isBanned": self.banned,
+                "thumbnail": self.thumbnail,
+            }
         except Exception:
             return self.set()
 
